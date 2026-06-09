@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Ordem de Luthieria | Santuário</title>
+    {% include 'loja/base_style.html' %}
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8f9fa; padding: 40px 0; }
+        .box { background: white; border: 1px solid var(--borda-sutil); border-radius: 12px; padding: 40px; width: 100%; max-width: 520px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .field { margin-bottom: 20px; }
+        .field label { font-size: 0.85rem; font-weight: 600; color: var(--texto-principal); display: block; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <a href="{% url 'home' %}" style="color: var(--azul-destaque); text-decoration: none; font-size: 0.85rem;">← Voltar</a>
+        <h1 style="color: var(--azul-premium); font-size: 1.5rem; margin: 15px 0 5px 0;">Agendar Luthieria</h1>
+        <p style="color: var(--texto-suave); font-size: 0.85rem; margin-bottom: 30px;">Abertura de Ordem de Serviço especializada.</p>
+
+        {% if sucesso %}
+            <div style="background: rgba(56, 161, 105, 0.1); border: 1px solid var(--sucesso); color: var(--sucesso); padding: 12px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 20px;">✓ Ordem de serviço enviada e agendada!</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" id="luthForm">
+            {% csrf_token %}
+            <div class="field">
+                <label>Modelo da Guitarra</label>
+                <input type="text" id="mod" required placeholder="Ex: Fender Stratocaster Custom Shop">
+            </div>
+            <div class="field">
+                <label>Ano do Instrumento</label>
+                <input type="number" required placeholder="Ex: 1994">
+            </div>
+            <div class="field">
+                <label>Fotos da Guitarra (Upload de Diagnóstico)</label>
+                <input type="file" accept="image/*" required>
+            </div>
+            <div class="field">
+                <label>Problema Relatado</label>
+                <textarea id="prob" rows="3" required placeholder="Descreva os ajustes necessários..."></textarea>
+            </div>
+            <div class="field">
+                <label>Horário na Agenda do Luthier</label>
+                <select>
+                    {% for h in horarios %} <option value="{{ h }}">{{ h }}</option> {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn-clean" style="width: 100%; padding: 12px; margin-top: 10px;">Enviar Instrumento para Análise</button>
+        </form>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8765');
+        document.getElementById('luthForm').onsubmit = () => {
+            const m = document.getElementById('mod').value;
+            if(ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: "novo_pedido", conteudo: `🛠️ Nova Ordem de Serviço de Luthieria aberta para uma [${m}].` }));
+            }
+        };
+    </script>
+</body>
+</html>

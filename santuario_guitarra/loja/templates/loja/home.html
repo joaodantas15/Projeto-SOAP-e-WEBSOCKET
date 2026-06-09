@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Santuário da Guitarra | Luthieria & Estúdio</title>
+    {% include 'loja/base_style.html' %}
+    <style>
+        .busca-box { flex: 0 1 400px; }
+        .busca-box form { display: flex; gap: 8px; }
+        .layout-container { display: grid; grid-template-columns: 1fr 320px; min-height: calc(100vh - 75px); }
+        
+        main { padding: 40px; background: #ffffff; }
+        .categoria-titulo { font-size: 1.3rem; font-weight: 700; color: var(--azul-premium); margin: 40px 0 20px 0; padding-bottom: 6px; border-bottom: 2px solid var(--azul-claro); letter-spacing: -0.3px; }
+        .categoria-titulo:first-of-type { margin-top: 0; }
+        
+        .grid-guitarras { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+        .card-guitarra { background: #f8f9fa; border: 1px solid var(--borda-sutil); border-radius: 8px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.25s ease; }
+        .card-guitarra:hover { background: #ffffff; border-color: transparent; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transform: translateY(-2px); }
+        
+        .img-container { width: 100%; height: 180px; background: #ffffff; border-radius: 6px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; border: 1px solid #edf2f7; }
+        .img-container img { max-width: 90%; max-height: 90%; object-fit: contain; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .card-guitarra:hover .img-container img { transform: scale(1.1); }
+        
+        .card-guitarra h3 { font-size: 1.05rem; color: var(--azul-premium); margin-bottom: 4px; font-weight: 600; }
+        .card-guitarra .sub { font-size: 0.75rem; color: var(--texto-suave); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-guitarra .txt { font-size: 0.85rem; color: var(--texto-suave); text-align: justify; margin-bottom: 16px; line-height: 1.4; }
+        .card-guitarra .preco { font-size: 1.2rem; font-weight: 700; color: var(--texto-principal); margin-bottom: 16px; }
+
+        aside { background: #f8f9fa; border-left: 1px solid var(--borda-sutil); padding: 30px 24px; display: flex; flex-direction: column; gap: 20px; }
+        .painel-atividades { flex: 1; background: #ffffff; border: 1px solid var(--borda-sutil); border-radius: 8px; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 0.8rem; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); }
+        .log-item { padding: 8px 12px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid var(--azul-destaque); color: var(--texto-principal); }
+        .badge-status { font-size: 0.75rem; font-weight: 700; color: var(--sucesso); display: flex; align-items: center; gap: 6px; }
+        .badge-status::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--sucesso); border-radius: 50%; }
+    </style>
+</head>
+<body>
+
+   <header>
+        <a href="/loja/" class="logo">SANTUÁRIO <span>GUITARRA</span></a>
+        <div class="busca-box">
+            <form method="GET" action="/loja/">
+                <input type="text" name="busca" placeholder="Buscar por modelo, cor ou marca..." value="{{ busca }}">
+                <button type="submit" class="btn-clean">Buscar</button>
+            </form>
+        </div>
+        <nav>
+            <a href="/loja/">Catálogo</a>
+            <a href="/loja/luthieria/">Luthieria</a>
+            <a href="/loja/estudio/">Estúdio</a>
+            <a href="/loja/carrinho/" style="font-weight: 600; color: var(--azul-premium);">Carrinho 🛒</a>
+            
+            {% if user.is_authenticated %}
+                <span style="font-size: 0.85rem; color: var(--azul-destaque); font-weight: 600;">👤 {{ user.username }}</span>
+                <form action="/loja/logout/" method="POST" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background:none; border:none; color:var(--erro); font-size:0.85rem; cursor:pointer; font-weight:500; margin-left:10px;">Sair</button>
+                </form>
+            {% else %}
+                <a href="/loja/login/">Entrar</a>
+                <a href="/loja/registro/" class="btn-clean">Criar Conta</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="layout-container">
+        <main>
+            {% if busca %}
+                <h2 class="categoria-titulo">Resultados para "{{ busca }}" — (<a href="{% url 'home' %}" style="font-size:0.85rem; color:var(--azul-destaque); font-weight:400; text-decoration:none;">Limpar Filtro</a>)</h2>
+                <div class="grid-guitarras">
+                    {% for g in guitarras %}
+                        <div class="card-guitarra">
+                            <div class="img-container">
+                                <img src="/imagens/{{ g.imagem }}" alt="{{ g.nome }}" onerror="this.src='https://placehold.co/300x200/f1f5f9/475569?text=🎸+{{ g.modelo }}'">
+                            </div>
+                            <div>
+                                <h3>{{ g.nome }}</h3>
+                                <div class="sub">Acabamento: {{ g.cor }}</div>
+                                <p class="txt">{{ g.historia }}</p>
+                            </div>
+                            <div>
+                                <div class="preco">R$ {{ g.preco|floatformat:2 }}</div>
+                                <a href="{% url 'adicionar_ao_carrinho' g.id %}" class="btn-clean" style="width: 100%;" onclick="notificarSocket('{{ g.nome }}')">Adicionar ao Carrinho</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {% regroup guitarras by modelo as categorias_list %}
+                {% for categoria in categorias_list %}
+                    <h2 class="categoria-titulo">{{ categoria.grouper }}s</h2>
+                    <div class="grid-guitarras">
+                        {% for g in categoria.list %}
+                            <div class="card-guitarra">
+                                <div class="img-container">
+                                    <img src="/imagens/{{ g.imagem }}" alt="{{ g.nome }}" onerror="this.src='https://placehold.co/300x200/f1f5f9/475569?text=🎸+{{ g.modelo }}'">
+                                </div>
+                                <div>
+                                    <h3>{{ g.nome }}</h3>
+                                    <div class="sub">Cor: {{ g.cor }}</div>
+                                    <p class="txt">{{ g.historia }}</p>
+                                </div>
+                                <div>
+                                    <div class="preco">R$ {{ g.preco|floatformat:2 }}</div>
+                                    <a href="{% url 'adicionar_ao_carrinho' g.id %}" class="btn-clean" style="width: 100%;" onclick="notificarSocket('{{ g.nome }}')">Adicionar ao Carrinho</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </main>
+
+        <aside>
+            <div>
+                <h3 style="font-size: 1rem; color: var(--azul-premium); margin-bottom: 4px;">Fluxo de Atividades</h3>
+                <div class="badge-status">Sincronizado via WS</div>
+            </div>
+            <div class="painel-atividades" id="ws-logs">
+                <div class="log-item" style="border-left-color: #cbd5e1;">Aguardando movimentações...</div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8765');
+        const box = document.getElementById('ws-logs');
+
+        ws.onmessage = (e) => {
+            const d = JSON.parse(e.data);
+            const el = document.createElement('div');
+            el.className = 'log-item';
+            el.innerText = d.conteudo;
+            box.appendChild(el);
+            box.scrollTop = box.scrollHeight;
+        };
+
+        function notificarSocket(nome) {
+            if(ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: "novo_pedido", conteudo: `Um cliente adicionou a [${nome}] ao carrinho.` }));
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<style>
+    :root {
+        --bg-global: #f8f9fa;
+        --bg-painel: #ffffff;
+        --azul-premium: #1a365d;
+        --azul-claro: #e2e8f0;
+        --azul-destaque: #3182ce;
+        --texto-principal: #2d3748;
+        --texto-suave: #718096;
+        --borda-sutil: #e2e8f0;
+        --sucesso: #38a169;
+        --erro: #e53e3e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: var(--bg-global); color: var(--texto-principal); line-height: 1.5; }
+    
+   
+    header { background: var(--bg-painel); border-bottom: 1px solid var(--borda-sutil); padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; text-decoration: none; color: var(--azul-premium); }
+    .logo span { color: var(--azul-destaque); font-weight: 400; }
+    
+    
+    nav { display: flex; gap: 24px; align-items: center; }
+    nav a { color: var(--texto-suave); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+    nav a:hover { color: var(--azul-premium); }
+    
+    
+    .btn-clean { background: var(--azul-premium); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s; display: inline-block; text-align: center; }
+    .btn-clean:hover { background: var(--azul-destaque); }
+    .btn-outline { background: transparent; border: 1px solid var(--borda-sutil); color: var(--texto-principal); padding: 10px 18px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.2s; }
+    .btn-outline:hover { border-color: var(--azul-premium); color: var(--azul-premium); }
+    
+    
+    input, select, textarea { background: white; border: 1px solid var(--borda-sutil); padding: 11px 14px; color: var(--texto-principal); border-radius: 6px; font-size: 0.9rem; outline: none; width: 100%; transition: border 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--azul-destaque); box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
+</style>

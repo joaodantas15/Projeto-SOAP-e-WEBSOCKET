@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Acesso | Santuário da Guitarra</title>
+    {% include 'loja/base_style.html' %}
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8f9fa; }
+        .login-box { background: #ffffff; border: 1px solid var(--borda-sutil); padding: 40px; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .field { margin-bottom: 20px; }
+        .field label { font-size: 0.85rem; font-weight: 600; color: var(--texto-principal); display: block; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1 style="color: var(--azul-premium); font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;">SANTUÁRIO</h1>
+        <p style="color: var(--texto-suave); font-size: 0.85rem; margin-bottom: 25px;">Entre com suas credenciais para acessar a plataforma.</p>
+
+        {% if form.errors %}
+            <div style="background: rgba(229, 62, 62, 0.08); border: 1px solid var(--erro); color: var(--erro); padding: 10px; border-radius: 6px; font-size: 0.8rem; margin-bottom: 15px;">
+                Usuário ou senha inválidos.
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="field">
+                <label>Nome de Usuário</label>
+                <input type="text" name="username" required placeholder="Digite seu usuário">
+            </div>
+            <div class="field">
+                <label>Senha de Acesso</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-clean" style="width: 100%; padding: 12px; margin-top: 5px;">Acessar Painel</button>
+        </form>
+
+        <p style="font-size: 0.85rem; color: var(--texto-suave); text-align: center; margin-top: 25px; margin-bottom: 0;">
+            Não possui cadastro? <a href="/loja/registro/" style="color: var(--azul-destaque); text-decoration: none; font-weight: 500;">Criar uma conta</a>
+        </p>
+    </div>
+</body>
+</html>

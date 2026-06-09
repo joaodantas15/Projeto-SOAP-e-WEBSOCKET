@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Shop Premium | Real-Time Studio</title>
+    <style>
+        :root {
+            --bg-principal: #0d0d0d;
+            --bg-card: #141414;
+            --borda-premium: #262626;
+            --texto-principal: #f5f5f5;
+            --texto-secundario: #8c8c8c;
+            --dourado-guitar: #c5a880;
+            --alerta-cor: #e63946;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Lado Esquerdo - Catálogo e Interface */
+        main {
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
+        }
+
+        header h1 span {
+            color: var(--dourado-guitar);
+            font-weight: 600;
+        }
+
+        header p {
+            color: var(--texto-secundario);
+            margin-bottom: 40px;
+        }
+
+        .catalogo {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .guitar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--borda-premium);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s;
+        }
+
+        .guitar-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--dourado-guitar);
+        }
+
+        /* Efeito de zoom na foto simulado de forma minimalista */
+        .guitar-img-wrapper {
+            width: 100%;
+            height: 200px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--texto-secundario);
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .guitar-img-wrapper span {
+            transition: transform 0.5s ease;
+        }
+
+        .guitar-card:hover .guitar-img-wrapper span {
+            transform: scale(1.2) rotate(5deg);
+            color: var(--dourado-guitar);
+        }
+
+        .guitar-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .guitar-card .preco {
+            color: var(--dourado-guitar);
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .btn-premium {
+            background: transparent;
+            border: 1px solid var(--dourado-guitar);
+            color: var(--dourado-guitar);
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-premium:hover {
+            background: var(--dourado-guitar);
+            color: var(--bg-principal);
+        }
+
+        /* Lado Direito - Painel de Monitoramento WebSocket */
+        aside {
+            background-color: var(--bg-card);
+            border-left: 1px solid var(--borda-premium);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+        }
+
+        aside h2 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-bottom: 5px;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .status-badge.conectado {
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+        }
+
+        .status-badge.desconectado {
+            background: rgba(230, 57, 70, 0.15);
+            color: var(--alerta-cor);
+        }
+
+        .log-container {
+            flex: 1;
+            background: var(--bg-principal);
+            border: 1px solid var(--borda-premium);
+            border-radius: 6px;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-msg {
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid var(--texto-secundario);
+            background: rgba(255, 255, 255, 0.02);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .log-msg.sistema { border-left-color: var(--dourado-guitar); color: var(--dourado-guitar); }
+        .log-msg.alerta { border-left-color: var(--alerta-cor); background: rgba(230, 57, 70, 0.05); }
+        .log-msg.notificacao { border-left-color: #3498db; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <main>
+        <header>
+            <h1>GUITAR SHOP <span>PREMIUM</span></h1>
+            <p>Sistemas Distribuidos — Catálogo Avançado & Agendamento em Tempo Real</p>
+        </header>
+
+        <div class="catalogo">
+            <div class="guitar-card">
+                <div class="guitar-img-wrapper"><span>🎸 Gibson Les Paul</span></div>
+                <h3>Les Paul Standard '60s</h3>
+                <p class="preco">R$ 24.900,00</p>
+                <button class="btn-premium" onclick="solicitarAtividade('Aluguel de Gibson Les Paul')">Reservar para Ensaio</button>
+            </div>
+
+            <div class="guitar-card">
+                <div class="guitar-img-wrapper"><span>🎸 Fender Stratocaster</span></div>
+                <h3>American Professional II</h3>
+                <p class="preco">R$ 19.500,00</p>
+                <button class="btn-premium" onclick="solicitarAtividade('Manutenção de Stratocaster')">Solicitar Luthieria</button>
+            </div>
+        </div>
+    </main>
+
+    <aside>
+        <h2>Painel do Estúdio</h2>
+        <div id="status" class="status-badge desconectado">Desconectado</div>
+        
+        <div class="log-container" id="logs">
+            </div>
+    </aside>
+
+    <script>
+        // Criação da conexão WebSocket nativa apontando para o nosso servidor Python
+        const ws = new WebSocket('ws://localhost:8765');
+        const logsContainer = document.getElementById('logs');
+        const statusBadge = document.getElementById('status');
+
+        ws.onopen = () => {
+            statusBadge.innerText = "Conectado em Tempo Real";
+            statusBadge.className = "status-badge conectado";
+            adicionarLog("Conexão estabelecida com o servidor ws://localhost:8765", "notificacao");
+        };
+
+        ws.onmessage = (event) => {
+            const dados = json = JSON.parse(event.data);
+            
+            let classeEstilo = "notificacao";
+            if (dados.tipo === "sistema") classeEstilo = "sistema";
+            if (dados.tipo === "alerta_loja") classeEstilo = "alerta";
+
+            adicionarLog(dados.conteudo, classeEstilo);
+        };
+
+        ws.onclose = () => {
+            statusBadge.innerText = "Conexão Encerrada";
+            statusBadge.className = "status-badge desconectado";
+            adicionarLog("Você foi desconectado do estúdio.", "alerta");
+        };
+
+        function solicitarAtividade(item) {
+            // Envia uma mensagem estruturada do cliente para o servidor via WebSocket
+            const payload = {
+                tipo: "novo_pedido",
+                conteudo: `Agendou: ${item}`
+            };
+            ws.send(JSON.stringify(payload));
+        }
+
+        function adicionarLog(texto, tipo) {
+            const elemento = document.createElement('div');
+            elemento.className = `log-msg ${tipo}`;
+            elemento.innerText = `[${new Date().toLocaleTimeString()}] ${texto}`;
+            logsContainer.appendChild(elemento);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>

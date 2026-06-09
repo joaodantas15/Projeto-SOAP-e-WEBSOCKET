@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro | Santuário da Guitarra</title>
+    {% include 'loja/base_style.html' %}
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8f9fa; }
+        .reg-box { background: #ffffff; border: 1px solid var(--borda-sutil); padding: 40px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .field { margin-bottom: 18px; }
+        .field label { font-size: 0.85rem; font-weight: 600; color: var(--texto-principal); display: block; margin-bottom: 6px; }
+        .errorlist { color: var(--erro); font-size: 0.8rem; list-style: none; margin-top: 4px; padding-left: 0; }
+        p { margin-bottom: 15px; }
+        p label { font-size: 0.85rem; font-weight: 600; color: var(--texto-principal); display: block; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+    <div class="reg-box">
+        <h1 style="color: var(--azul-premium); font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;">Criar Conta</h1>
+        <p style="color: var(--texto-suave); font-size: 0.85rem; margin-bottom: 25px;">Registre-se para reservar estúdios e comprar instrumentos.</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-clean" style="width: 100%; padding: 12px; margin-top: 10px;">Finalizar Cadastro</button>
+        </form>
+
+        <p style="font-size: 0.85rem; color: var(--texto-suave); text-align: center; margin-top: 25px; margin-bottom: 0;">
+            Já é membro? <a href="/loja/login/" style="color: var(--azul-destaque); text-decoration: none; font-weight: 500;">Fazer Login</a>
+        </p>
+    </div>
+</body>
+</html>

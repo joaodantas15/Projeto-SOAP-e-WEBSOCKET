@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Reserva de Estúdio | Santuário</title>
+    {% include 'loja/base_style.html' %}
+    <style>
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f8f9fa; }
+        .box { background: white; border: 1px solid var(--borda-sutil); border-radius: 12px; padding: 40px; width: 100%; max-width: 550px; }
+        .trava { border: 1px solid var(--erro); background: rgba(229, 62, 98, 0.03); color: var(--erro); padding: 16px; border-radius: 6px; font-size: 0.85rem; }
+        .liberado { border: 1px solid var(--sucesso); background: rgba(56, 161, 105, 0.03); color: var(--sucesso); padding: 16px; border-radius: 6px; font-size: 0.85rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <a href="{% url 'home' %}" style="color: var(--azul-destaque); text-decoration: none; font-size: 0.85rem;">← Voltar</a>
+        <h1 style="color: var(--azul-premium); font-size: 1.5rem; margin: 15px 0 5px 0;">Reserva de Estúdio</h1>
+        <p style="color: var(--texto-suave); font-size: 0.85rem; margin-bottom: 25px;">Salas profissionais com tratamento acústico de ponta.</p>
+
+        <form method="POST" id="estForm" style="margin-bottom: 30px;">
+            {% csrf_token %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Data</label>
+                    <input type="date" required>
+                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 6px;">Tempo de Sessão</label>
+                    <select id="tempo">
+                        <option value="2 horas">2 Horas</option>
+                        <option value="4 horas">4 Horas</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-clean" style="width: 100%;">Reservar Horário da Sala</button>
+        </form>
+
+        <div style="border-top: 1px solid var(--borda-sutil); padding-top: 25px;">
+            <h3 style="font-size: 1rem; color: var(--azul-premium); margin-bottom: 12px;">Aluguel de Guitarras do Acervo</h3>
+            {% if estudio_agendado %}
+                <div class="liberado"><strong>Acesso Liberado:</strong> Como você já agendou uma sala de ensaio, selecione um modelo clássico para utilizar na sessão.</div>
+                <select id="guitar-rent" style="margin-bottom: 15px;">
+                    <option>Gibson Les Paul Standard '60s Cherry Burst</option>
+                    <option>Fender American Vintage II Telecaster</option>
+                </select>
+                <button class="btn-outline" style="width: 100%;" onclick="alugarAcervo()">Vincular Aluguel à Reserva</button>
+            {% else %}
+                <div class="trava">🔒 <strong>Acesso Bloqueado:</strong> O aluguel de instrumentos do acervo é exclusivo para sessões de estúdio ativas. Confirme o formulário de reserva acima primeiro.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8765');
+        document.getElementById('estForm').onsubmit = () => {
+            const t = document.getElementById('tempo').value;
+            if(ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: "novo_pedido", conteudo: `🎤 Um estúdio foi RESERVADO para um ensaio de [${t}].` }));
+            }
+        };
+        function alugarAcervo() {
+            const g = document.getElementById('guitar-rent').value;
+            if(ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ tipo: "novo_pedido", conteudo: `🎸 Equipamento Alugado: [${g}] vinculada a um ensaio.` }));
+            }
+            alert("Instrumento reservado para o seu ensaio!");
+        }
+    </script>
+</body>
+</html>
