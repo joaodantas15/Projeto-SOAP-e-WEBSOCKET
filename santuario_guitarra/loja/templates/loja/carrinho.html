@@ -13,8 +13,8 @@
     </style>
 </head>
 <body>
-    <a href="{% url 'home' %}" style="color: var(--azul-destaque); text-decoration: none; font-size: 0.9rem;">← Voltar ao Catálogo</a>
-    <h1 style="font-weight: 700; color: var(--azul-premium); margin-top: 15px;">Seu Carrinho</h1>
+    <a href="/loja/" style="color: var(--azul-destaque); text-decoration: none; font-size: 0.9rem; font-weight: 500;">← Voltar ao Catálogo</a>
+    <h1 style="font-weight: 700; color: var(--azul-premium); margin-top: 15px; letter-spacing: -0.5px;">Seu Carrinho</h1>
 
     {% if itens %}
         <div class="grid">
@@ -22,21 +22,23 @@
                 {% for item in itens %}
                     <div class="card-item">
                         <div>
-                            <h3 style="font-size: 1.05rem; color: var(--azul-premium);">{{ item.guitarra.nome }}</h3>
+                            <h3 style="font-size: 1.05rem; color: var(--azul-premium); font-weight: 600;">{{ item.guitarra.nome }}</h3>
                             <p style="color: var(--texto-suave); font-size: 0.85rem; margin-top: 2px;">Qtd: {{ item.quantidade }} x R$ {{ item.guitarra.preco|floatformat:2 }}</p>
                         </div>
                         <div style="display: flex; align-items: center; gap: 25px;">
-                            <span style="font-weight: 700;">R$ {{ item.subtotal|floatformat:2 }}</span>
-                            <a href="{% url 'remover_do_carrinho' item.guitarra.id %}" style="color: var(--erro); font-size: 0.85rem; text-decoration: none;">Remover</a>
+                            <span style="font-weight: 700; color: var(--texto-principal);">R$ {{ item.subtotal|floatformat:2 }}</span>
+                            <a href="/loja/carrinho/remover/{{ item.guitarra.id }}/" style="color: var(--erro); font-size: 0.85rem; text-decoration: none; font-weight: 500;">Remover</a>
                         </div>
                     </div>
                 {% endfor %}
             </div>
             <div class="resumo">
-                <h3 style="font-weight: 600; font-size: 1.1rem;">Resumo do Pedido</h3>
+                <h3 style="font-weight: 600; font-size: 1.1rem; color: var(--azul-premium);">Resumo do Pedido</h3>
                 <div class="total">R$ {{ total|floatformat:2 }}</div>
-                <button class="btn-clean" style="width: 100%; padding: 14px;" onclick="finalizarCompra()">Finalizar Compra</button>
-                <a href="{% url 'limpar_carrinho' %}" class="btn-outline" style="display: block; text-align: center; margin-top: 12px; font-size: 0.8rem;">Esvaziar</a>
+                
+                <button class="btn-clean" style="width: 100%; padding: 14px; font-size: 0.9rem;" onclick="finalizarCompra()">Finalizar Compra</button>
+                
+                <a href="/loja/carrinho/limpar/" class="btn-outline" style="display: block; text-align: center; margin-top: 12px; font-size: 0.8rem; text-decoration: none; font-weight: 500;">Esvaziar</a>
             </div>
         </div>
     {% else %}
@@ -44,13 +46,20 @@
     {% endif %}
 
     <script>
+        // Inicializa o cliente WebSocket para broadcast em tempo real na rede do Santuário
         const ws = new WebSocket('ws://localhost:8765');
+
         function finalizarCompra() {
-            if(ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ tipo: "novo_pedido", conteudo: "✨ Um músico acaba de CONCLUIR um pedido de compra no Santuário!" }));
+            // Notifica todos os terminais via WebSocket antes de processar faturamento
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ 
+                    tipo: "novo_pedido", 
+                    conteudo: "✨ Um músico acaba de CONCLUIR um pedido de compra no Santuário!" 
+                }));
             }
-            alert("Pedido enviado ao sistema do Santuário!");
-            window.location.href = "{% url 'limpar_carrinho' %}";
+            
+            // Redireciona para a view de finalização que publica a ordem de compra assíncrona no RabbitMQ (MOM)
+            window.location.href = "/loja/carrinho/finalizar/";
         }
     </script>
 </body>

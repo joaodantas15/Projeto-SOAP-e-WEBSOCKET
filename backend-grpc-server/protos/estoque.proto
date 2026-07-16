@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package estoque;
+
+// Serviço de gerenciamento do estoque premium
+service EstoqueService {
+    rpc ConsultarGuitarra (ConsultaRequest) returns (GuitarraResponse);
+    rpc CadastrarGuitarra (CadastroRequest) returns (CadastroResponse);
+}
+
+// Mensagem simples de entrada
+message ConsultaRequest {
+    int32 id = 1;
+}
+
+// Mensagem composta (Atributos estruturados)
+message GuitarraResponse {
+    int32 id = 1;
+    string nome = 2;
+    string modelo = 3;
+    double preco = 4;
+    int32 quantidade = 5;
+    bool disponivel = 6;
+}
+
+message CadastroRequest {
+    string nome = 1;
+    string modelo = 2;
+    double preco = 3;
+    int32 quantidade = 4;
+}
+
+message CadastroResponse {
+    bool sucesso = 1;
+    string mensagem = 2;
+    int32 id_gerado = 3;
+}

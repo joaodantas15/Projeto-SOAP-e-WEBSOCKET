@@ -4,6 +4,14 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.views.decorators.csrf import csrf_exempt
 
+
+# Importações gRPC
+import grpc
+import pika
+import json
+from . import estoque_pb2
+from . import estoque_pb2_grpc
+
 # BANCO DE DADOS EM MEMÓRIA PARA O CATÁLOGO EXIGIDO
 GUITARRAS_DATABASE = [
     # --- STRATOCASTER (4 variações) ---
@@ -45,51 +53,52 @@ GUITARRAS_DATABASE = [
 ]
 
 def home(request):
-    """Página inicial com catálogo expandido e barra de busca integrada"""
     termo_busca = request.GET.get('busca', '').strip().lower()
     guitarras = GUITARRAS_DATABASE
-    
     if termo_busca:
-        # Filtra por modelo, cor ou nome da guitarra (Requisito 8)
-        guitarras = [
-            g for g in guitarras 
-            if termo_busca in g['nome'].lower() 
-            or termo_busca in g['modelo'].lower() 
-            or termo_busca in g['cor'].lower()
-        ]
-        
+        guitarras = [g for g in guitarras if termo_busca in g['nome'].lower() or termo_busca in g['modelo'].lower() or termo_busca in g['cor'].lower()]
     return render(request, 'loja/home.html', {'guitarras': guitarras, 'busca': termo_busca})
+
 @csrf_exempt
 def registro(request):
-    """Mecanismo de Registro de Usuário 100% Funcional (Requisito 1)"""
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('/loja/') 
+            return redirect('/loja/')
+    else:
         form = UserCreationForm()
     return render(request, 'registration/registro.html', {'form': form})
+
 def carrinho(request):
-    """Gerencia o carrinho de compras salvo na sessão do usuário (Requisito 6)"""
     cart = request.session.get('carrinho', {})
     produtos_no_carrinho = []
     total = 0.0
-
     for item_id, qtd in cart.items():
         guitarra = next((g for g in GUITARRAS_DATABASE if g['id'] == int(item_id)), None)
         if guitarra:
             subtotal = guitarra['preco'] * qtd
             total += subtotal
-            produtos_no_carrinho.append({
-                'guitarra': guitarra,
-                'quantidade': qtd,
-                'subtotal': subtotal
-            })
-
+            produtos_no_carrinho.append({'guitarra': guitarra, 'quantidade': qtd, 'subtotal': subtotal})
     return render(request, 'loja/carrinho.html', {'itens': produtos_no_carrinho, 'total': total})
 
 def adicionar_ao_carrinho(request, produto_id):
+    # -------------------------------------------------------------
+    # CHAMADA remota gRPC para verificar a disponibilidade de estoque
+    # -------------------------------------------------------------
+    try:
+        with grpc.insecure_channel('localhost:50051') as channel:
+            stub = estoque_pb2_grpc.EstoqueServiceStub(channel)
+            resposta = stub.ConsultarGuitarra(estoque_pb2.ConsultaRequest(id=int(produto_id)))
+            
+            # Se o gRPC responder que o estoque é zero ou indisponível, barramos a compra
+            if resposta.id != 0 and not resposta.disponivel:
+                print(f"[Django Client] Chamada gRPC: Produto {produto_id} indisponível no estoque.")
+                return render(request, 'loja/erro_estoque.html', {"nome": resposta.nome})
+    except grpc.RpcError as e:
+        print("[Django Client] Falha na comunicação gRPC com o microsserviço de estoque. Prosseguindo em contingência.")
+
     cart = request.session.get('carrinho', {})
     cart[str(produto_id)] = cart.get(str(produto_id), 0) + 1
     request.session['carrinho'] = cart
@@ -106,25 +115,64 @@ def limpar_carrinho(request):
     if 'carrinho' in request.session:
         del request.session['carrinho']
     return redirect('carrinho')
+
+@login_required
+def finalizar_pedido(request):
+    """Fecha a compra, limpa o carrinho e publica na Fila do MOM (RabbitMQ)"""
+    cart = request.session.get('carrinho', {})
+    if not cart:
+        return redirect('home')
+
+    pedidos_enviados = []
+    
+    # -------------------------------------------------------------
+    # CONEXÃO MOM: Publicando as mensagens de venda no RabbitMQ
+    # -------------------------------------------------------------
+    try:
+        conexao = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        canal = conexao.channel()
+        canal.queue_declare(queue='pedidos_loja', durable=True)
+
+        for item_id, qtd in cart.items():
+            guitarra = next((g for g in GUITARRAS_DATABASE if g['id'] == int(item_id)), None)
+            if guitarra:
+                payload = {
+                    "id": guitarra["id"],
+                    "nome": guitarra["nome"],
+                    "preco": guitarra["preco"],
+                    "quantidade": qtd
+                }
+                # Publica a mensagem de faturamento de forma assíncrona
+                canal.basic_publish(
+                    exchange='',
+                    routing_key='pedidos_loja',
+                    body=json.dumps(payload),
+                    properties=pika.BasicProperties(delivery_mode=2) # Mensagem persistente em disco
+                )
+                pedidos_enviados.append(guitarra["nome"])
+                
+        conexao.close()
+        print(f"[Django Publisher] MOM: {len(pedidos_enviados)} pedido(s) postado(s) na fila do RabbitMQ.")
+    except Exception as e:
+         print(f"[Django Publisher] Falha ao publicar no broker MOM: {e}")
+
+    # Limpa carrinho
+    request.session['carrinho'] = {}
+    return render(request, 'loja/sucesso_pedido.html', {"pedidos": pedidos_enviados})
+
 @csrf_exempt
 @login_required
 def luthieria(request):
-    """Página dedicada à Ordem de Serviço de Luthieria (Requisito 2)"""
     horarios = ["09:00", "10:30", "14:00", "15:30", "17:00"]
     sucesso = False
     if request.method == 'POST':
-        # Aqui capturaríamos as fotos e dados do formulário
         sucesso = True
     return render(request, 'loja/luthieria.html', {'horarios': horarios, 'sucesso': sucesso})
+
 @csrf_exempt
 @login_required
 def estudio(request):
-    """Página dedicada ao Agendamento de Estúdio (Requisito 3 e 7)"""
-    # Se o usuário agendou o estúdio, liberamos a flag na sessão para permitir o aluguel
     estudio_agendado = request.session.get('estudio_agendado', False)
-    
     if request.method == 'POST':
         request.session['estudio_agendado'] = True
         estudio_agendado = True
-        
-    return render(request, 'loja/estudio.html', {'estudio_agendado': estudio_agendado})

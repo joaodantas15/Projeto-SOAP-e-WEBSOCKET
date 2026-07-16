@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido Enviado | Santuário da Guitarra</title>
+    {% include 'loja/base_style.html' %}
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+    <div style="background: white; border: 1px solid var(--borda-sutil); padding: 40px; border-radius: 8px; text-align: center; max-width: 500px;">
+        <h1 style="color: var(--sucesso); margin-bottom: 15px;">Processando Faturamento</h1>
+        <p>Obrigado! Seu pedido foi postado com sucesso no nosso Middleware de Mensageria (MOM) e já está sendo processado de forma assíncrona na fila.</p>
+        <ul style="text-align: left; margin: 20px 0; font-size: 0.9rem; color: var(--texto-suave);">
+            {% for item in pedidos %}
+                <li>✓ {{ item }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/loja/" class="btn-clean" style="margin-top: 20px; width: 100%;">Continuar Comprando</a>
+    </div>
+</body>
+</html>

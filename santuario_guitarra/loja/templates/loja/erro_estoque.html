@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Sem Estoque | Santuário da Guitarra</title>
+    {% include 'loja/base_style.html' %}
+</head>
+<body style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+    <div style="background: white; border: 1px solid var(--borda-sutil); padding: 40px; border-radius: 8px; text-align: center; max-width: 500px;">
+        <h1 style="color: var(--erro); margin-bottom: 15px;">Instrumento Esgotado!</h1>
+        <p>Pedimos desculpas. Nosso microsserviço de consulta rápida de estoque (gRPC) informou que o modelo <strong>{{ nome }}</strong> não está disponível no momento.</p>
+        <a href="/loja/" class="btn-clean" style="margin-top: 20px;">Voltar ao Catálogo</a>
+    </div>
+</body>
+</html>
