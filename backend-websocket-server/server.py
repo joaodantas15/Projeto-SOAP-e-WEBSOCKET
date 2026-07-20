@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 # Decisão Técnica: Usamos um dicionário para mapear { id_unico: conexao_websocket }
 CONEXOES_ATIVAS = {}
 
-async def gerenciar_conexao(websocket, path):
+async def gerenciar_conexao(websocket, path=None):
     cliente_id = str(uuid.uuid4())[:8]
     CONEXOES_ATIVAS[cliente_id] = websocket
     
